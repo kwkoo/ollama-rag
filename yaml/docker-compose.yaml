@@ -1,0 +1,21 @@
+version: "3.5"
+
+services:
+
+  frontend:
+    container_name: frontend
+    image: "ghcr.io/kwkoo/ollama-rag"
+    environment:
+    - PORT=8080
+    - PERSIST_DIRECTORY=/data/db
+    - SOURCE_DIRECTORY=/data/source_documents
+    - EMBEDDINGS_MODEL_NAME=all-MiniLM-L6-v2
+    - MODEL=mistral
+    - OLLAMA_URL=http://host.docker.internal:11434
+    ports:
+    - 8080:8080
+    extra_hosts:
+    - host.docker.internal:host-gateway
+    volumes:
+    - ../db/:/data/db/
+    - ../source_documents/:/data/source_documents/
