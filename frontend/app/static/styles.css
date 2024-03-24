@@ -2,7 +2,7 @@ body {
     font-family: sans-serif;
 }
 
-#ingest-button, #query-button, #delete-button {
+#ingest-button, #query-button, #delete-button, #refresh-button {
     display: block;
     visibility: visible;
     margin-top: 20px;

@@ -2,6 +2,7 @@
 
 The code was copied from [`PromptEngineer48 / Ollama`](https://github.com/PromptEngineer48/Ollama)
 
+
 ## Running with `docker compose`
 
 01. Download and install [Ollama](https://ollama.ai/) on your machine

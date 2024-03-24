@@ -10,7 +10,7 @@ import os
 
 from flask import Flask, redirect, Response, request, abort
 from ingest import ingest_documents
-from query import ollama_query
+from query import ollama_query, initialize_query_engine
 from delete_directory import delete_database
 
 # do not log access to health probes
@@ -53,6 +53,11 @@ def deletedb():
         return "OK"
     except:
         abort(500, description='could not delete database')
+
+@app.route("/api/refreshdb")
+def refreshdb():
+    initialize_query_engine()
+    return "OK"
 
 if __name__ == '__main__':
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)

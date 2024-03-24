@@ -75,6 +75,17 @@ function deletedb() {
     .catch(error => appendOutput(error));
 }
 
+function refreshdb() {
+    fetch('/api/refreshdb')
+    .then(response => {
+        if (response.status >= 200 && response.status < 300)
+            appendOutput('database refreshed');
+        else
+            appendOutput('error refreshing database - response status ' + response.status);
+    })
+    .catch(error => appendOutput(error));
+}
+
 function appendOutput(msg) {
     let line = document.createElement("div");
     line.className = "server-output-line";
