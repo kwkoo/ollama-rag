@@ -3,6 +3,33 @@
 The code was copied from [`PromptEngineer48 / Ollama`](https://github.com/PromptEngineer48/Ollama)
 
 
+## Deploying on OpenShift
+
+01. Provision an OpenShift cluster on `demo.redhat.com` from the `NVIDIA GPU Operator OCP4 Workshop` catalog item
+
+01. Login with `oc login`
+
+01. Deploy the NFD and Nvidia GPU operators
+
+		make deploy-nvidia
+
+01. Deploy ollama and the frontend to OpenShift
+
+		make deploy
+	
+	When the application has been deployed, it should output the URLs of the file browser and the frontend
+
+01. Access the file browser and upload the documents you want to index
+
+01. Access the frontend and click on the link to ingest documents to the vector database
+
+01. After the document ingestion process has completed, click on the `Refresh Database` button - this forces the query engine to refresh its connection to the vector database
+
+01. Access the front page of the frontend again and click on the link to run your queries
+
+01. Type your query into the prompt text field and click the `Query` button
+
+
 ## Running with `docker compose`
 
 01. Download and install [Ollama](https://ollama.ai/) on your machine

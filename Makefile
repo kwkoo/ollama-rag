@@ -4,7 +4,7 @@ BUILDERNAME=multiarch-builder
 
 BASE:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 
-.PHONY: deploy image deploy-nfd deploy-nvidia
+.PHONY: deploy deploy-nfd deploy-nvidia image
 
 # deploys all components to a single OpenShift cluster
 deploy: ensure-logged-in
@@ -16,26 +16,18 @@ deploy: ensure-logged-in
 	  oc get limitrange -n $(PROJ) -o name | xargs oc delete -n $(PROJ); \
 	fi
 	oc apply -n $(PROJ) -k $(BASE)/yaml/overlays/all/
+	@/bin/echo -n 'waiting for routes to show up...'
+	@until oc get -n $(PROJ) route/frontend >/dev/null 2>/dev/null && oc get -n $(PROJ) route/filebrowser >/dev/null 2>/dev/null; do \
+	  /bin/echo -n '.'; \
+	  sleep 5; \
+	done
+	@echo "done"
+	@echo "access the file browser at http://`oc get -n $(PROJ) route/filebrowser -o jsonpath='{.spec.host}'`"
+	@echo "access the frontend at http://`oc get -n $(PROJ) route/frontend -o jsonpath='{.spec.host}'`"
 
 ensure-logged-in:
 	oc whoami
 	@echo 'user is logged in'
-
-image:
-	-mkdir -p $(BASE)/docker-cache
-	docker buildx use $(BUILDERNAME) || docker buildx create --name $(BUILDERNAME) --use
-	docker buildx build \
-	  --push \
-	  --platform=linux/amd64,linux/arm64 \
-	  --cache-to type=local,dest=$(BASE)/docker-cache,mode=max \
-	  --cache-from type=local,src=$(BASE)/docker-cache \
-	  --rm \
-	  -t $(IMAGE) \
-	  $(BASE)/frontend
-	#docker build \
-	#  --rm \
-	#  -t $(IMAGE) \
-	#  $(BASE)/frontend
 
 deploy-nfd: ensure-logged-in
 	@echo "deploying NodeFeatureDiscovery operator..."
@@ -88,3 +80,19 @@ deploy-nvidia: deploy-nfd
 	  echo "checking $$po"; \
 	  oc rsh -n nvidia-gpu-operator $$po nvidia-smi; \
 	done
+
+image:
+	-mkdir -p $(BASE)/docker-cache
+	docker buildx use $(BUILDERNAME) || docker buildx create --name $(BUILDERNAME) --use
+	docker buildx build \
+	  --push \
+	  --platform=linux/amd64,linux/arm64 \
+	  --cache-to type=local,dest=$(BASE)/docker-cache,mode=max \
+	  --cache-from type=local,src=$(BASE)/docker-cache \
+	  --rm \
+	  -t $(IMAGE) \
+	  $(BASE)/frontend
+	#docker build \
+	#  --rm \
+	#  -t $(IMAGE) \
+	#  $(BASE)/frontend
