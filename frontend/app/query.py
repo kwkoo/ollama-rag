@@ -9,6 +9,7 @@ import os
 import threading
 import queue
 from typing import Any, Generator
+import requests
 
 # Copied from https://github.com/langchain-ai/langchain/issues/4950#issuecomment-1790074587
 class QueueCallbackHandler(BaseCallbackHandler):
@@ -42,8 +43,13 @@ def stream(cb: Any, llm_queue: queue.Queue) -> Generator:
             continue
 
     t.join()
-    if res is not None and res.get('source_documents') is not None:
-        yield('\n==========\n')
+    yield('\n==========\n')
+    if res is None:
+        yield('could not get results from LLM\n')
+        return
+    if res.get('error') is not None:
+        yield('error: ' + str(res.get('error')) + '\n')
+    if res.get('source_documents') is not None:
         yield('Sources\n')
         for doc in res['source_documents']:
             yield('----------\n')
@@ -83,9 +89,13 @@ def initialize_query_engine():
 
 def ollama_query(prompt: str):
     def cb(output):
-        res = qa(prompt)
-        if res.get('source_documents') is not None:
-            output['source_documents'] = res['source_documents']
+        try:
+            res = qa(prompt)
+            if res.get('source_documents') is not None:
+                output['source_documents'] = res['source_documents']
+        except requests.exceptions.RequestException as err:
+            output['error'] = err
+            return
     lock.acquire()
     yield from stream(cb, output_queue)
     lock.release()
