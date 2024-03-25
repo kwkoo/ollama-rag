@@ -57,6 +57,11 @@ The code was copied from [`PromptEngineer48 / Ollama`](https://github.com/Prompt
 
 01. Run your queries at <http://localhost:8080/query.html>
 
+	If you encounter any connection errors, try removing or commenting out the following in `yaml/docker-compose.yaml`
+
+		extra_hosts:
+		- host.docker.internal:host-gateway
+
 
 ## Resources
 
