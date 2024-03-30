@@ -16,10 +16,8 @@ ENV \
   NVIDIA_VISIBLE_DEVICES=all
 
 WORKDIR /app
-COPY --chown=:0 ./app/requirements.txt /app/
-ARG TARGETARCH
 RUN \
-  --mount=type=cache,target=/var/cache/frontend-pip-$TARGETARCH \
+  --mount=type=bind,source=./app/requirements.txt,target=/app/requirements.txt \
   pip3 install --no-cache-dir -r requirements.txt \
   && \
   pip3 install --no-cache-dir pysqlite3-binary
@@ -28,10 +26,8 @@ RUN \
 FROM docker.io/python:3.11 AS base-arm64
 
 WORKDIR /app
-COPY --chown=:0 ./app/requirements.txt /app/
-ARG TARGETARCH
 RUN \
-  --mount=type=cache,target=/var/cache/frontend-pip-$TARGETARCH \
+  --mount=type=bind,source=./app/requirements.txt,target=/app/requirements.txt \
   UNAME_M=arm64 UNAME_p=arm LLAMA_NO_METAL=1 pip3 install --no-cache-dir -r requirements.txt
 
 
@@ -44,10 +40,11 @@ CMD ["python3", "./app.py"]
 EXPOSE 8080
 
 RUN \
-  --mount=type=cache,target=/var/cache/frontend-$TARGETARCH \
+  --mount=type=cache,target=/root/.cache \
+  --mount=type=cache,target=/root/nltk_data \
   python3 -c "from langchain.embeddings import HuggingFaceEmbeddings; HuggingFaceEmbeddings(model_name='$EMBEDDINGS_MODEL')" \
   && \
-  python3 -m nltk.downloader all \
+  python3 -c "import nltk; nltk.download('punkt')" \
   && \
   chown -R :0 /root /app \
   && \

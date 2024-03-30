@@ -82,17 +82,34 @@ deploy-nvidia: deploy-nfd
 	done
 
 image:
-	-mkdir -p $(BASE)/docker-cache
-	docker buildx use $(BUILDERNAME) || docker buildx create --name $(BUILDERNAME) --use
+	-mkdir -p $(BASE)/docker-cache/amd64 $(BASE)/docker-cache/arm64 2>/dev/null
+	docker buildx use $(BUILDERNAME) || docker buildx create --name $(BUILDERNAME) --use --buildkitd-flags '--oci-worker-gc-keepstorage 50000'
 	docker buildx build \
 	  --push \
-	  --platform=linux/amd64,linux/arm64 \
-	  --cache-to type=local,dest=$(BASE)/docker-cache,mode=max \
-	  --cache-from type=local,src=$(BASE)/docker-cache \
+	  --provenance false \
+	  --sbom false \
+	  --platform=linux/amd64 \
+	  --cache-to type=local,dest=$(BASE)/docker-cache/amd64,mode=max \
+	  --cache-from type=local,src=$(BASE)/docker-cache/amd64 \
 	  --rm \
-	  -t $(IMAGE) \
+	  -t $(IMAGE):amd64 \
 	  $(BASE)/frontend
-	#docker build \
-	#  --rm \
-	#  -t $(IMAGE) \
-	#  $(BASE)/frontend
+	docker buildx build \
+	  --push \
+	  --provenance false \
+	  --sbom false \
+	  --platform=linux/arm64 \
+	  --cache-to type=local,dest=$(BASE)/docker-cache/arm64,mode=max \
+	  --cache-from type=local,src=$(BASE)/docker-cache/arm64 \
+	  --rm \
+	  -t $(IMAGE):arm64 \
+	  $(BASE)/frontend
+	docker manifest create \
+	  $(IMAGE):latest \
+	  --amend $(IMAGE):amd64 \
+	  --amend $(IMAGE):arm64
+	docker manifest push --purge $(IMAGE):latest
+	@#docker build \
+	@#  --rm \
+	@#  -t $(IMAGE) \
+	@#  $(BASE)/frontend
