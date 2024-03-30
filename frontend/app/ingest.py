@@ -129,7 +129,6 @@ def create_embeddings(db, embeddings, texts):
         db.add_documents(texts)
 
     db.persist()
-    time.sleep(10)
 
 def ingest_documents():
     # Create embeddings
